@@ -10,7 +10,7 @@
 namespace sim{
 class SimulationGovernor {
 public:
-    SimulationGovernor(int calculation_step_, int calculation_interval_);
+    SimulationGovernor(float calculation_step_, int calculation_interval_);
     bool startSimulation(std::mutex& mtx);
     void asyncPauseSimulation();
     void pauseSimulation();

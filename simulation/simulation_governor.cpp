@@ -4,7 +4,7 @@
 #include "planet.h"
 
 namespace sim {
-    SimulationGovernor::SimulationGovernor(int calculation_step_, int calculation_interval_) {
+    SimulationGovernor::SimulationGovernor(float calculation_step_, int calculation_interval_) {
         this->calculation_interval_ = calculation_interval_;
         this->calculation_step_ = calculation_step_;
     }
@@ -14,9 +14,8 @@ namespace sim {
             return false;
         is_running=true;
         try {
-            std::cout << "Starting simulation" << std::endl;
+            std::cout << "Starting simulation"<< std::endl;
             std::cout << bodies_.size() << std::endl;
-
             thread_ = std::thread([&, this]() {
                 while (is_running) {
                     {
