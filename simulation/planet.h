@@ -30,8 +30,7 @@ public:
             "name", &Planet::name,
             "position", &Planet::position,
             "velocity", &Planet::velocity,
-            "mass", &Planet::mass,
-            "bounciness", &Planet::bounciness
+            "mass", &Planet::mass
         );
     };
 };

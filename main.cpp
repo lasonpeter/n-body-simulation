@@ -7,24 +7,51 @@
 #include <raymath.h>
 #include "simulation/planet.h"
 #include "simulation/simulation_governor.h"
+#include "data-structures/oct_tree.h"
 #include "raygui.h"
+#include <bits/stdc++.h>
+
+
+
+const Color color_map[18] = {GRAY,GREEN,BLUE,PURPLE,ORANGE,RED,PINK,GRAY,DARKGRAY,MAROON,GOLD,LIME,DARKGREEN,DARKBLUE,DARKPURPLE,DARKBROWN,DARKGRAY};
+constexpr  float dif=0.001f;
+void draw_structure(const dstruct::OctTree &octree_t, int depth,float whl) {
+    //auto start = std::chrono::high_resolution_clock::now();
+
+    //check if the octreFe tree has children
+    /*if(!&(octree_t.children)) {
+        //std::cout<<depth<<" Has NO children"<<std::endl;
+        return;
+    }*/
+    //std::cout<<depth<<" Has children"<<std::endl;
+    DrawCubeWires(octree_t.position, whl-dif, whl-dif, whl-dif,color_map[depth]);
+    for (const auto& child: octree_t.children) {
+        //if()
+        draw_structure(*child,depth+1,whl/2);
+    }
+    //auto stop = std::chrono::high_resolution_clock::now();
+    //auto duration = duration_cast<std::chrono::milliseconds>(stop - start);
+    //std::cout<<"Drawing octree took:"<<duration.count() << std::endl;
+}
+
 int main()
 {
-    const int screenWidth = 800;
-    const int screenHeight = 450;
+    const int screenWidth = 1920;
+    const int screenHeight = 1080;
     SetConfigFlags(FLAG_WINDOW_RESIZABLE);    // Window configuration flags
     InitWindow(screenWidth, screenHeight, "simulation test");
+    SetTraceLogLevel(LOG_ERROR);
 
     //Camera settings
     Camera3D camera = { 0 };
-    camera.position = (Vector3){ 16.0f, 16.0f, 16.0f }; // Camera position
-    //camera.target = (Vector3){ 0.0f, 0.0f, 0.0f };      // Camera looking at point
+    camera.position = (Vector3){ 50.0f, 50.0f, 50.0f }; // Camera position
+    camera.target = (Vector3){ 0.0f, 0.0f, 0.0f };      // Camera looking at point
     camera.up = (Vector3){ 0.0f, 1.0f, 0.0f };          // Camera up vector (rotation towards target)
-    camera.fovy = 45.0f;                                // Camera field-of-view Y
+    camera.fovy = 70.0f;                                // Camera field-of-view Y
     camera.projection = CAMERA_PERSPECTIVE;    SetTargetFPS(60);
     //movement and such
     float speed=0.05f;
-    float movement_speed=0.1f;
+    float movement_speed=0.2f;
     //interface
     bool is_gui_mode=false;
     SetExitKey(KEY_NULL);
@@ -33,29 +60,84 @@ int main()
     std::mutex mtx;
     sim::SimulationGovernor governor = sim::SimulationGovernor(0.01f,1000);
 
-        std::cout<<"Simulation not loaded"<<std::endl;
+//        std::cout<<"Simulation not loaded"<<std::numeric_limits<size_t>::max()<<std::endl;
         /*Planet planet = new Planet(Vector3{3,0,0},10000,Vector3{0.00001,0,0},1,BLACK,"Earth",1);
         Planet planet2 = Planet(Vector3{-3,0,0},10,Vector3{-0.00001,0,0},1,RED,"Moon",2);*/
 
-        bodies.push_back(std::make_shared<Planet>(Vector3{-3, 0, 0}, 1000, Vector3{-0.00004, 0, 0}, 1,RED, "Moon", 2));
-        bodies.push_back(std::make_shared<Planet>(Vector3{3, 0, 0}, 10000, Vector3{0.00016, 0, 0}, 1,BLACK, "Earth", 1));
-        bodies.push_back(std::make_shared<Planet>(Vector3{3, 0, 9}, 1000000, Vector3{-0.00001, 0, 0}, 1,YELLOW, "Sun", 2));
-        bodies.push_back(std::make_shared<Planet>(Vector3{3, 2, 0}, 10000, Vector3{0.00002, 0.000005, 0}, 1,GREEN, "Yoo", 1));
-        bodies.push_back(std::make_shared<Planet>(Vector3{3, -6, 0}, 1000, Vector3{-0.00001, 0, 0}, 1,VIOLET, "Eve", 2));
-        bodies.push_back(std::make_shared<Planet>(Vector3{3, 0, 5}, 10000, Vector3{0.00032, 0, 0.00032}, 1,ORANGE, "Mars", 1));
-        bodies.push_back(std::make_shared<Planet>(Vector3{-3, -3, 0}, 1000, Vector3{-0.00001, 0, 0}, 1,BLUE, "Neptune", 2));
-        bodies.push_back(std::make_shared<Planet>(Vector3{1, -1, 5}, 10000, Vector3{0.00002, 0, 0}, 1,GRAY, "Pluto", 1));
-        governor.setBodies(bodies);
+        bodies.push_back(std::make_shared<Planet>(Vector3{-3, 0, 0}, 1000, Vector3{-0.00004, 0, 0},1,RED, "Moon", 2));
+
+
+    /*srand(time(nullptr));
+    float great_x{}, great_y{}, great_z{};
+    std::vector<Vector3> cluster_centers = {
+        {0, 0, 0},
+        {20, 20, 20}
+    };
+
+    for (int i = 0; i < 500; ++i) {
+        // Select a random cluster center
+        Vector3 center = cluster_centers[std::rand() % cluster_centers.size()];
+
+        // Generate coordinates around the cluster center
+        float x = center.x + static_cast<float>(std::rand() % 10 - 5);
+        float y = center.y + static_cast<float>(std::rand() % 10 - 5);
+        float z = center.z + static_cast<float>(std::rand() % 10 - 5);
+
+        if (abs(x) > great_x) great_x = abs(x);
+        if (abs(y) > great_y) great_y = abs(y);
+        if (abs(z) > great_z) great_z = abs(z);
+
+        governor.oct_tree.bodies_.push_back(std::make_shared<Planet>(Vector3{x, y, z}, 10000, Vector3{0.00016, 0, 0}, 1, BLACK, "Earth", 1));
+        ////sleep for 1ms
+    }*/
+        srand(time(nullptr));
+    float great_x{}, great_y{}, great_z{};
+    for (int i = 0; i < 5000; ++i){
+        float x,y,z;
+        x=static_cast<float>(std::rand() % 60 -30);
+        y=static_cast<float>(std::rand() % 60 -30);
+        z=static_cast<float>(std::rand() % 60 -30);
+        if(abs(x)>great_x) {
+            great_x=abs(x);
+        }
+        if(abs(y)>great_y) {
+            great_y=abs(y);
+        }
+        if(abs(z)>great_z) {
+            great_z=abs(z);
+        }
+        governor.oct_tree.bodies_.push_back(std::make_shared<Planet>(Vector3{x,y,z}, 10000, Vector3{0.00016, 0, 0}, 1,BLACK, "Earth", 1));
+        ////sleep for 1ms
+    }
+
+
+
+    bool is_finished=false;
+    auto thread_ = std::thread([&]() {
+        std::this_thread::sleep_for(std::chrono::milliseconds(4000));
+        auto start = std::chrono::high_resolution_clock::now();
+        governor.oct_tree.generateOctree(great_x,great_y,great_z);
+        //dstruct::OctTree::GenerateDasOctree(great_x,great_y,great_z,governor.oct_tree);
+        auto stop = std::chrono::high_resolution_clock::now();
+        auto duration = duration_cast<std::chrono::nanoseconds>(stop - start);
+        // To get the value of duration use the count()
+        // member function on the duration object
+        std::cout << "generating octree took:"<<duration.count() <<"ns"<<duration_cast<std::chrono::milliseconds>(stop - start).count() << std::endl;
+        is_finished=true;
+    });
+    std::cout<<sizeof(governor.oct_tree);
+
+
+        //governor.setBodies(bodies);
         //governor.loadSimulation();
     try {
-        governor.startSimulation(mtx);
+        //governor.startSimulation(mtx);
     }
     catch (std::exception e) {
         std::cout<<e.what()<<std::endl;
     }
     //sim::RigidBody* yes = &planet;
     //Planet* z= dynamic_cast<Planet*>(yes);
-    std::cout<<"WEEEEEEEe"<<std::endl;
 
     //--------------------------------------------------------------------------------------
     std::cout<<GetMonitorRefreshRate(0)<<std::endl;
@@ -99,7 +181,7 @@ int main()
             camera_change.y=1;
         }
         IsKeyDown(KEY_W);
-        std::cout<<"WEEEEEEEe"<<std::endl;
+
         //HideCursor();
 
         Vector3 camera_move={0,0,0};
@@ -123,7 +205,7 @@ int main()
                 -(IsKeyDown(KEY_C))*movement_speed +(IsKeyDown(KEY_SPACE))*movement_speed                                                  // Move up-down
             },camera_move,
             GetMouseWheelMove()*2.0f);
-        std::cout<<"WEEEEEEEe"<<std::endl;
+
         // Update
         //----------------------------------------------------------------------------------
         // TODO: Update your variables here
@@ -135,28 +217,44 @@ int main()
 
         /*auto bodiz= governor.getBodies();
         //auto a= dynamic_cast<Planet*>(bodiz[0]);*/
-        std::cout<<"WEEEEEEEe"<<std::endl;
 
-        std::cout<<"WEEEEEEEe"<<std::endl;
+
+
 
         BeginMode3D(camera);
+        //DrawCubeWires((Vector3){0,0,0},60.0,60.0,60.0,YELLOW);
         Vector3 position = { 0.0f, 0.0f, 0.0f };
         //DrawModel(LoadModelFromMesh(GenMeshCube(5.0f,5.0f,5.0f)), position, 1.0f, WHITE);
 
-        {
-            std::lock_guard<std::mutex> lock(mtx);
-            for (auto rigid_body: governor.bodies_) {
-                try {
-                    Planet* we =dynamic_cast<Planet*>(rigid_body.get());
-                    DrawModel(LoadModelFromMesh(GenMeshSphere(1.0f,10.0f,10.0f)), we->position, 1.0f, we->color);
-                    std::cout<<"model drawn"<<we->name<<std::endl;
-                }catch (error_t) {
-                    std::cout<<"Error"<<std::endl;
+        //if(is_finished)
+            {
+            {
+                auto start = std::chrono::high_resolution_clock::now();
+                std::lock_guard<std::mutex> lock(mtx);
+                for (const auto& rigid_body: governor.oct_tree.bodies_) {
+                    try {
+                        auto* we =dynamic_cast<Planet*>(rigid_body.get());
+                        //DrawModel(LoadModelFromMesh(GenMeshSphere(.1f,3,3)), we->position, 1.0f, we->color);
+                        DrawCubeWires(we->position, 0.05f, 0.05f, 0.05f, we->color);
+                        //std::cout<<"model drawn"<<we->name<<std::endl;
+                    }catch (error_t) {
+                        std::cout<<"Error"<<std::endl;
+                    }
                 }
+                auto stop = std::chrono::high_resolution_clock::now();
+                auto duration = duration_cast<std::chrono::milliseconds>(stop - start);
+                std::cout<<"Drawing took:"<<duration.count() << std::endl;
             }
-        }
-        DrawGrid(500, 1.0);
 
+
+            //DrawGrid(500, 1.0);
+            float greatest_val=std::max(great_x,std::max(great_y,great_z));
+            auto start = std::chrono::high_resolution_clock::now();
+            draw_structure(governor.oct_tree,0,60);
+            auto stop = std::chrono::high_resolution_clock::now();
+            auto duration = duration_cast<std::chrono::milliseconds>(stop - start);
+            std::cout<<"Drawing octree took:"<<duration.count() << std::endl;
+        }
         EndMode3D();
 
         Color color = {255, 0, 0, 255};
@@ -181,16 +279,17 @@ int main()
         GuiLabel((Rectangle){ 30, 310, 150, 20 }, "Movement speed:");
         GuiSlider((Rectangle){ 50, 330, 80, 20 }, "", TextFormat("%2.2f", movement_speed), &movement_speed, 0.001, 4);
 
+
         EndDrawing();
 
         //----------------------------------------------------------------------------------
     }
+    thread_.join();
     governor.pauseSimulation();
     //governor.saveSimulation();
     // De-Initialization
     //--------------------------------------------------------------------------------------
     CloseWindow();        // Close window and OpenGL context
     //--------------------------------------------------------------------------------------
-
     return 0;
 }

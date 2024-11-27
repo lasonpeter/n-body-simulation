@@ -4,10 +4,18 @@
 #include "planet.h"
 
 namespace sim {
-    SimulationGovernor::SimulationGovernor(float calculation_step_, int calculation_interval_) {
+    /*SimulationGovernor::SimulationGovernor(float calculation_step_, int calculation_interval_): oct_tree({0,0,0}) {
         this->calculation_interval_ = calculation_interval_;
         this->calculation_step_ = calculation_step_;
     }
+    */
+
+    SimulationGovernor::SimulationGovernor(float calculation_step_, int calculation_interval_): oct_tree({0,0,0}) {
+        this->calculation_interval_ = calculation_interval_;
+        this->calculation_step_ = calculation_step_;
+    }
+
+    //rewrite this one to use the octree
 
     bool SimulationGovernor::startSimulation(std::mutex& mtx) {
         if(is_running)
@@ -57,6 +65,10 @@ namespace sim {
         return true;
     }
 
+    bool SimulationGovernor::startOctreeSimulation(std::mutex &mtx) {
+
+    }
+
     void SimulationGovernor::setBodies(std::vector<std::shared_ptr<RigidBody>> bodies) {
         this->bodies_ = bodies;
     }
@@ -84,6 +96,7 @@ namespace sim {
                 planets.push_back(planet);
             }
         }
+        //planets.des
         auto result = glz::write_file_json(planets, "planets.json", std::string{});
 
         if (result) {

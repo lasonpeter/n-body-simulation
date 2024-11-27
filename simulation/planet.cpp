@@ -12,7 +12,6 @@ Planet::Planet(Vector3 initial_position, unsigned long long mass, Vector3 veloci
     this->mass = mass;
     this->velocity = velocity;
     //this->acceleration = acceleration;
-    this->bounciness = bounciness;
     this->color = color;
     this->name = name;
     this->id = id;

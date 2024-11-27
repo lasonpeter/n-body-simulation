@@ -10,13 +10,11 @@
 namespace sim {
     class RigidBody {
     public:
-        virtual ~RigidBody(){};
+        virtual ~RigidBody()= default;
         RigidBody();
-        ulong mass;
+        ulong mass; //It's a ulong instead of uint due to memory alignment as well as the fact that mass can be rather large
         Vector3 position{};
         Vector3 velocity{};
-        //Vector3 acceleration; will try without this
-        float bounciness;
         Vector3 calculateGravityForce(RigidBody* rigid_body2);
         void updateState(Vector3* force,float delta_t);
     private:
