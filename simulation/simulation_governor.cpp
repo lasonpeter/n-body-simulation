@@ -10,7 +10,7 @@ namespace sim {
     }
     */
 
-    SimulationGovernor::SimulationGovernor(float calculation_step_, int calculation_interval_): oct_tree({0,0,0}) {
+    SimulationGovernor::SimulationGovernor(float calculation_step_, int calculation_interval_) {
         this->calculation_interval_ = calculation_interval_;
         this->calculation_step_ = calculation_step_;
     }

@@ -12,7 +12,7 @@ namespace sim {
     public:
         virtual ~RigidBody()= default;
         RigidBody();
-        ulong mass; //It's a ulong instead of uint due to memory alignment as well as the fact that mass can be rather large
+        ulong mass; //It's a ulong instead of uint due to memory alignment which makes class with int mass have the same size in memory as one with ulong
         Vector3 position{};
         Vector3 velocity{};
         Vector3 calculateGravityForce(RigidBody* rigid_body2);

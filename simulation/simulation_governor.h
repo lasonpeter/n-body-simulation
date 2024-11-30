@@ -21,7 +21,7 @@ namespace sim {
         std::vector<std::shared_ptr<RigidBody>> bodies_;
         std::thread thread_;
         bool is_running = false;
-        dstruct::OctTree oct_tree;
+        std::shared_ptr<dstruct::OctTree> oct_tree;
     private:
         // in seconds
         float calculation_step_ = 10.0f;
