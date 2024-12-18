@@ -83,7 +83,7 @@ int main()
     HideCursor();
     std::vector<std::shared_ptr<sim::RigidBody>> bodies = {};
     std::mutex mtx;
-    sim::SimulationGovernor governor = sim::SimulationGovernor(0.01f,1000);
+    sim::SimulationGovernor governor = sim::SimulationGovernor(10.0f,1000);
     governor.oct_tree = std::make_shared<dstruct::OctTree>(Vector3{0,0,0},1);
 
 //        std::cout<<"Simulation not loaded"<<std::numeric_limits<size_t>::max()<<std::endl;
@@ -101,7 +101,7 @@ int main()
             {20, 20, 20}
         };
 
-        for (int i = 0; i < 100000; ++i) {
+        for (int i = 0; i < 5000; ++i) {
             // Select a random cluster center
             Vector3 center = cluster_centers[std::rand() % cluster_centers.size()];
 
@@ -156,7 +156,7 @@ int main()
 
     bool is_finished=false;
     auto thread_ = std::thread([&]() {
-        constexpr int MAX=100;
+        constexpr int MAX=10;
         auto start = std::chrono::high_resolution_clock::now();
         for (int i = 0; i < MAX; ++i) {
             float x,y,z;
@@ -172,9 +172,9 @@ int main()
             if(abs(z)>great_val) {
                 great_val=abs(z);
             }
-            governor.oct_tree->bodies_.push_back(std::make_shared<Planet>(Vector3{x,y,z}, 10000, Vector3{0.00016, 0, 0}, 1,BLACK, "Earth", 1));
+            governor.oct_tree->bodies_.push_back(std::make_shared<Planet>(Vector3{x,y,z}, 1000000, Vector3{0.00016, 0, 0}, 1,BLACK, "Earth", 1));
             governor.oct_tree->size=great_val;
-            dstruct::OctTree::GenerateDasOctree(governor.oct_tree);
+            governor.oct_tree->generateDasOctree();
         }
         //std::this_thread::sleep_for(std::chrono::milliseconds(4000));;
         //governor.oct_tree->generateOctree(great_x,great_y,great_z);
@@ -185,6 +185,7 @@ int main()
         // member function on the duration object
         std::cout << "generating octree took on average:"<< duration.count()/MAX <<" ns and "<<duration_cast<std::chrono::milliseconds>(stop - start).count()/MAX<< "ms" << std::endl;
         is_finished=true;
+        governor.startOctreeSimulation(mtx);
     });
     std::cout<<sizeof(governor.oct_tree);
 
@@ -201,13 +202,14 @@ int main()
     //Planet* z= dynamic_cast<Planet*>(yes);
 
     //--------------------------------------------------------------------------------------
+
     std::cout<<GetMonitorRefreshRate(0)<<std::endl;
     Vector3 camera_position = {0,0,0};
     //float speed=0.1f;
     // Main game loop
     while (!WindowShouldClose())    // Detect window close button or ESC key
     {
-        std::cout<<"IS IN GUI MODE: "<<is_gui_mode<<std::endl;
+        //std::cout<<"IS IN GUI MODE: "<<is_gui_mode<<std::eif(x>5)ndl;
         //GUI state control
         if(!is_gui_mode) {
             SetWindowFocused();
@@ -254,7 +256,7 @@ int main()
                 };
             SetMousePosition(GetRenderWidth()/2,GetRenderHeight()/2);
         }
-        ClearBackground(RAYWHITE);
+        ClearBackground(WHITE);
         Vector3Scale(camera_change,speed);
         camera_position=Vector3Add(camera_position,camera_change);
         UpdateCameraPro(&camera,
@@ -291,12 +293,12 @@ int main()
             {
             {
                 auto start = std::chrono::high_resolution_clock::now();
-                std::lock_guard<std::mutex> lock(mtx);
+                //std::lock_guard<std::mutex> lock(mtx);
                 for (const auto& rigid_body: governor.oct_tree->bodies_) {
                     try {
                         auto* we =dynamic_cast<Planet*>(rigid_body.get());
                         //DrawModel(LoadModelFromMesh(GenMeshSphere(.1f,3,3)), we->position, 1.0f, we->color);
-                        DrawCubeWires(we->position, 0.01f, 0.01f, 0.01f, we->color);
+                        DrawCubeWires(we->position, 0.04f, 0.04f, 0.04f, we->color);
                         //std::cout<<"model drawn"<<we->name<<std::endl;
                     }catch (error_t) {
                         std::cout<<"Error"<<std::endl;

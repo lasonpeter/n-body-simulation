@@ -18,10 +18,14 @@ namespace dstruct {
             // maybe could optimize this by storing an array of pointers to the bodies only on the leafs and not the branches
             std::vector< std::shared_ptr<sim::RigidBody>> bodies_{};
             std::vector<std::shared_ptr<OctTree>> children{};
-            float size;
+            float size{};
+            ulong mass{};
+            std::shared_ptr<OctTree> parent;
         //char id;
 
             OctTree(Vector3 position_t, float size_t);
+
+            OctTree(Vector3 position_t, float size_t, const std::shared_ptr<OctTree> &parent_t);
             /**
              * Generates an octree structure from available bodies
              * @param diff_x
@@ -29,11 +33,20 @@ namespace dstruct {
              * @param diff_z
              */
             void generateOctree();
+
+            void generateDasOctree();
+
+            void calculateStep(const std::shared_ptr<OctTree> &oct_tree, float delta_t);
+
             static constexpr int MAX_BODIES=16;
             //std::shared_ptr<OctTree> parent; not now
             void iterativeGenerateOctree(float diff_x, float diff_y, float diff_z);
 
-            static void GenerateDasOctree(std::shared_ptr<OctTree> oct_tree);
+            //static void GenerateDasOctree(std::shared_ptr<OctTree> oct_tree);
+
+            //void CalculateStep(std::shared_ptr<OctTree> oct_tree, float delta_t);
+
+            //void CalculateForce(std::shared_ptr<OctTree> oct_tree);
     };
 }
 
