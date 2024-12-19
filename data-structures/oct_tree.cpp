@@ -111,6 +111,20 @@ namespace dstruct {
         if(!children.empty()) {
             children.clear();
         }
+        //find the greatest x or y or z absolute value of the bodies
+        float great=0;
+        for (const auto& body : bodies_) {
+            if(abs(body->position.x)>great) {
+                great=abs(body->position.x);
+            }
+            if(abs(body->position.y)>great) {
+                great=abs(body->position.y);
+            }
+            if(abs(body->position.z)>great) {
+                great=abs(body->position.z);
+            }
+        }
+        size=great;
         std::queue<std::shared_ptr<OctTree>> queue{};
         queue.push(std::shared_ptr<OctTree>(this));
         while (!queue.empty()) {
@@ -161,17 +175,21 @@ namespace dstruct {
                             if(body->position.z>node->position.z) {
                                 node->children[0]->bodies_.push_back(body);
                                 node->children[0]->mass += body->mass;
+                                node->children[0]->center_of_mass = centerOfMass(node->children[0]->center_of_mass,node->children[0]->mass,body->position,body->mass);
                             }else{
                                 node->children[1]->bodies_.push_back(body);
                                 node->children[1]->mass += body->mass;
+                                node->children[1]->center_of_mass = centerOfMass(node->children[1]->center_of_mass,node->children[1]->mass,body->position,body->mass);
                             }
                         }else{
                             if(body->position.z>node->position.z) {
                                 node->children[2]->bodies_.push_back(body);
                                 node->children[2]->mass += body->mass;
+                                node->children[2]->center_of_mass = centerOfMass(node->children[2]->center_of_mass,node->children[2]->mass,body->position,body->mass);
                             }else{
                                 node->children[3]->bodies_.push_back(body);
                                 node->children[3]->mass += body->mass;
+                                node->children[3]->center_of_mass = centerOfMass(node->children[3]->center_of_mass,node->children[3]->mass,body->position,body->mass);
                             }
                         }
                     }
@@ -180,17 +198,21 @@ namespace dstruct {
                             if(body->position.z>node->position.z) {
                                 node->children[4]->bodies_.push_back(body);
                                 node->children[4]->mass += body->mass;
+                                node->children[4]->center_of_mass = centerOfMass(node->children[4]->center_of_mass,node->children[4]->mass,body->position,body->mass);
                             }else{
                                 node->children[5]->bodies_.push_back(body);
                                 node->children[5]->mass += body->mass;
+                                node->children[5]->center_of_mass = centerOfMass(node->children[5]->center_of_mass,node->children[5]->mass,body->position,body->mass);
                             }
                         }else{
                             if(body->position.z>node->position.z) {
                                 node->children[6]->bodies_.push_back(body);
                                 node->children[6]->mass += body->mass;
+                                node->children[6]->center_of_mass = centerOfMass(node->children[6]->center_of_mass,node->children[6]->mass,body->position,body->mass);
                             }else{
                                 node->children[7]->bodies_.push_back(body);
                                 node->children[7]->mass += body->mass;
+                                node->children[7]->center_of_mass = centerOfMass(node->children[7]->center_of_mass,node->children[7]->mass,body->position,body->mass);
                             }
                         }
                     }
@@ -214,12 +236,12 @@ namespace dstruct {
             return;
         }
         Vector3 force{};
-        float distance = Vector3Distance(this->position,oct_tree->position);
+        float distance = Vector3Distance(this->center_of_mass,oct_tree->center_of_mass);
         if(distance==0) {
             return;
         }
         float force_mangintude = static_cast<float>(this->mass * oct_tree->mass * cnst::GRAVITY_CONSTANT) / (distance*distance);
-        force = Vector3Subtract(oct_tree->position,this->position);
+        force = Vector3Subtract(oct_tree->center_of_mass,this->center_of_mass);
         force = Vector3Normalize(force);
         force = Vector3Scale(force,force_mangintude);
         //in here it is basically acceleration
@@ -241,4 +263,11 @@ namespace dstruct {
         }
     }
 
+    Vector3 OctTree::centerOfMass(Vector3 vec1, ulong mass1,Vector3 vec2, ulong mass2) {
+        Vector3 center_of_mass{};
+        center_of_mass.x = (vec1.x * mass1 + vec2.x * mass2) / (mass1 + mass2);
+        center_of_mass.y = (vec1.y * mass1 + vec2.y * mass2) / (mass1 + mass2);
+        center_of_mass.z = (vec1.z * mass1 + vec2.z * mass2) / (mass1 + mass2);
+        return center_of_mass;
+    }
 }

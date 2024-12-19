@@ -182,7 +182,7 @@ namespace sim {
                                 /*pos = body->position - pos;
                                 std::cout<<"Delta pos"<<pos.x<<","<<pos.y<<","<<pos.z<<std::endl;*/
                             }
-                            if(x>50) {
+                            if(x>10) {
                                 oct_tree->generateDasOctree();
                                 x=0;
                             }

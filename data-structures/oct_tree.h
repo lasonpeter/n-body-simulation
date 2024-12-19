@@ -8,6 +8,16 @@
 #include <vector>
 #include "../simulation/rigid_body.h"
 
+
+
+///////
+//////
+///
+///
+///TODO Calculate center of mass
+
+
+
 namespace dstruct {
     class OctTree {
         public:
@@ -18,6 +28,7 @@ namespace dstruct {
             // maybe could optimize this by storing an array of pointers to the bodies only on the leafs and not the branches
             std::vector< std::shared_ptr<sim::RigidBody>> bodies_{};
             std::vector<std::shared_ptr<OctTree>> children{};
+            Vector3 center_of_mass{};
             float size{};
             ulong mass{};
             std::shared_ptr<OctTree> parent;
@@ -37,6 +48,8 @@ namespace dstruct {
             void generateDasOctree();
 
             void calculateStep(const std::shared_ptr<OctTree> &oct_tree, float delta_t);
+
+            static Vector3 centerOfMass(Vector3 vec1, ulong mass1, Vector3 vec2, ulong mass2);
 
             static constexpr int MAX_BODIES=16;
             //std::shared_ptr<OctTree> parent; not now

@@ -27,6 +27,7 @@ void draw_structure_iterative(const dstruct::OctTree &octree_t, int depth, float
 
         if (current_depth >= draw_level) {
             DrawCubeWires(node->position, current_whl - dif, current_whl - dif, current_whl - dif, color_map[current_depth]);
+            //DrawSphere(node->center_of_mass, 0.5f, RED);
         }
 
         if (!node->children.empty()) {
@@ -83,7 +84,7 @@ int main()
     HideCursor();
     std::vector<std::shared_ptr<sim::RigidBody>> bodies = {};
     std::mutex mtx;
-    sim::SimulationGovernor governor = sim::SimulationGovernor(10.0f,1000);
+    sim::SimulationGovernor governor = sim::SimulationGovernor(1.0f,10000000);
     governor.oct_tree = std::make_shared<dstruct::OctTree>(Vector3{0,0,0},1);
 
 //        std::cout<<"Simulation not loaded"<<std::numeric_limits<size_t>::max()<<std::endl;
@@ -101,12 +102,12 @@ int main()
             {20, 20, 20}
         };
 
-        for (int i = 0; i < 5000; ++i) {
+        for (int i = 0; i < 50; ++i) {
             // Select a random cluster center
             Vector3 center = cluster_centers[std::rand() % cluster_centers.size()];
 
             // Generate spherical coordinates
-            float radius = static_cast<float>(std::rand()) / (static_cast<float>(RAND_MAX / 10));
+            float radius = static_cast<float>(std::rand()) / (static_cast<float>(RAND_MAX / 5));
             float theta = static_cast<float>(std::rand()) / (static_cast<float>(RAND_MAX / (2 * PI)));
             float phi = static_cast<float>(std::rand()) / (static_cast<float>(RAND_MAX / PI));
 
@@ -313,7 +314,7 @@ int main()
             //DrawGrid(500, 1.0);
             //float greatest_val=std::max(great_x,std::max(great_y,great_z));
             auto start = std::chrono::high_resolution_clock::now();
-            draw_structure_iterative(*governor.oct_tree,0,60,draw_level);
+            draw_structure_iterative(*governor.oct_tree,0,governor.oct_tree->size*2,draw_level);
             auto stop = std::chrono::high_resolution_clock::now();
             auto duration = duration_cast<std::chrono::milliseconds>(stop - start);
             //std::cout<<"Drawing octree took:"<<duration.count() << std::endl;
