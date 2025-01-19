@@ -10,26 +10,29 @@ namespace sim {
     public:
         SimulationGovernor(float calculation_step_, int calculation_interval_);
 
-        bool startSimulation(std::mutex& mtx);
-        bool startOctreeSimulation(std::mutex& mtx);
-        void asyncPauseSimulation();
-        void pauseSimulation();
-        bool saveSimulation(std::mutex& mtx);
+        float calculate_theta(RigidBody *body, dstruct::OctTree*);
+
+        void calculate_force(RigidBody *body, dstruct::OctTree *oct_tree);
+
+        void regenerate_tree();
+
+        bool start_simulation(std::mutex &mtx);
+        void async_pause_simulation();
+        void pause_simulation();
+        bool save_simulation(std::mutex& mtx);
         bool loadSimulation();
-        void setBodies(std::vector<std::shared_ptr<RigidBody>> bodies);
-        std::vector<std::shared_ptr<RigidBody>> getBodies();
-        std::vector<std::shared_ptr<RigidBody>> bodies_;
+        std::vector<RigidBody*> rigid_bodies;
         std::thread thread_;
+        float theta = 1.0f;
+        Vector3 general_center_of_mass{};
+        float general_mass{};
         bool is_running = false;
-        std::shared_ptr<dstruct::OctTree> oct_tree;
+        dstruct::OctTree* oct_tree;
     private:
         // in seconds
-        float calculation_step_ = 10.0f;
+        float calculation_step_ = 1.0f;
         // in nanoseconds
         int calculation_interval_ = 1000000;
-        // indicating whether the simulation is running
-        void calculateGravity();
-        void updateState();
     };
 }
 

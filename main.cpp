@@ -12,9 +12,11 @@
 #include <bits/stdc++.h>
 
 
-
 const Color color_map[18] = {LIGHTGRAY,GRAY,DARKGRAY,BROWN,BLUE,PURPLE,ORANGE,RED,PINK,GRAY,DARKGRAY,MAROON,GOLD,LIME,DARKGREEN,DARKBLUE,DARKPURPLE};
 constexpr  float dif=0.00f;
+constexpr int BODY_SIZE=1.5f;
+constexpr float FORCE_MULTIPLIER =10000;
+constexpr float FORCE_THICKNESS =1;
 
 //convert this to use heap memory
 void draw_structure_iterative(const dstruct::OctTree &octree_t, int depth, float whl, int draw_level) {
@@ -27,16 +29,19 @@ void draw_structure_iterative(const dstruct::OctTree &octree_t, int depth, float
 
         if (current_depth >= draw_level) {
             DrawCubeWires(node->position, current_whl - dif, current_whl - dif, current_whl - dif, color_map[current_depth]);
+            DrawSphereWires(node->center_of_mass,1.0f,5,5,GREEN);
+            //DrawCubeWires(node->bodies_[0]->position, BODY_SIZE, BODY_SIZE, BODY_SIZE, BLACK);
             //DrawSphere(node->center_of_mass, 0.5f, RED);
         }
 
         if (!node->children.empty()) {
             for (const auto& child : node->children) {
-                stack.push(std::make_tuple(child.get(), current_depth + 1, current_whl / 2));
+                stack.push(std::make_tuple(child, current_depth + 1, current_whl / 2));
             }
         }
     }
 }
+
 
 void draw_structure(const dstruct::OctTree &octree_t, int depth,float whl,int draw_level) {
     //auto start = std::chrono::high_resolution_clock::now();
@@ -75,7 +80,7 @@ int main()
     //movement and such
     float speed=0.05f;
     float movement_speed=0.2f;
-    int draw_level=15;
+    int draw_level=50;
     //interface
     bool is_gui_mode=false;
     SetExitKey(KEY_NULL);
@@ -84,33 +89,36 @@ int main()
     HideCursor();
     std::vector<std::shared_ptr<sim::RigidBody>> bodies = {};
     std::mutex mtx;
-    sim::SimulationGovernor governor = sim::SimulationGovernor(1.0f,10000000);
-    governor.oct_tree = std::make_shared<dstruct::OctTree>(Vector3{0,0,0},1);
-
-//        std::cout<<"Simulation not loaded"<<std::numeric_limits<size_t>::max()<<std::endl;
-        /*Planet planet = new Planet(Vector3{3,0,0},10000,Vector3{0.00001,0,0},1,BLACK,"Earth",1);
-        Planet planet2 = Planet(Vector3{-3,0,0},10,Vector3{-0.00001,0,0},1,RED,"Moon",2);*/
-
-        //bodies.push_back(std::make_shared<Planet>(Vector3{-3, 0, 0}, 1000, Vector3{-0.00004, 0, 0},1,RED, "Moon", 2));
+    sim::SimulationGovernor governor = sim::SimulationGovernor(2.0f,30000);
+    governor.oct_tree = new dstruct::OctTree(Vector3{0,0,0},60);
+    std::vector<sim::RigidBody*> bodies_{};
     float great_val{};
     bool is_cluster=true;
+    auto start = std::chrono::high_resolution_clock::now();
+
+    //INTERESTING ONES
+    /*{20, 20, -20},
+            {20, 20, 20},
+            {-20, 20, 20},
+            {-20, 20, -20}*/
+
+    //TODO To optimize try making a list of objects first and then pushing it into octree
     if(is_cluster) {
         srand(time(nullptr));
         float great_x{}, great_y{}, great_z{};
         std::vector<Vector3> cluster_centers = {
-            {-20, -20, -20},
-            {20, 20, 20}
+            {-10, 10, -20},
+            {20, 20, 20},
+            {-20, 20, 20},
+            {-20, -20, -20}
         };
-
-        for (int i = 0; i < 50; ++i) {
+        for (int i = 0; i < 30000; ++i) {
             // Select a random cluster center
             Vector3 center = cluster_centers[std::rand() % cluster_centers.size()];
-
             // Generate spherical coordinates
             float radius = static_cast<float>(std::rand()) / (static_cast<float>(RAND_MAX / 5));
             float theta = static_cast<float>(std::rand()) / (static_cast<float>(RAND_MAX / (2 * PI)));
             float phi = static_cast<float>(std::rand()) / (static_cast<float>(RAND_MAX / PI));
-
             // Convert spherical coordinates to Cartesian coordinates
             float x = center.x + radius * sin(phi) * cos(theta);
             float y = center.y + radius * sin(phi) * sin(theta);
@@ -128,13 +136,14 @@ int main()
             if (abs(x) > great_x) great_x = abs(x);
             if (abs(y) > great_y) great_y = abs(y);
             if (abs(z) > great_z) great_z = abs(z);
-
-            governor.oct_tree->bodies_.push_back(std::make_shared<Planet>(Vector3{x, y, z}, 10000, Vector3{0.00016, 0, 0}, 1, BLACK, "Earth", 1));
+            sim::RigidBody* body = new Planet(Vector3{x, y, z}, 100000.0f, Vector3{0.0001f, 0, 0}, 1, BLACK, "Earth", 1);
+            governor.oct_tree->add_body(body);
+            governor.rigid_bodies.push_back(body);
         }
     }
     else {
         srand(time(nullptr));
-        for (int i = 0; i < 100000; ++i){
+        for (int i = 0; i < 50000; ++i){
             float x,y,z;
             x=static_cast<float>(std::rand()) / (static_cast<float>(RAND_MAX / 60)) - 30;
             y=static_cast<float>(std::rand()) / (static_cast<float>(RAND_MAX / 60)) - 30;
@@ -148,13 +157,27 @@ int main()
             if(abs(z)>great_val) {
                 great_val=abs(z);
             }
-            governor.oct_tree->bodies_.push_back(std::make_shared<Planet>(Vector3{x,y,z}, 10000, Vector3{0.00016, 0, 0}, 1,BLACK, "Earth", 1));
+            sim::RigidBody* body = new Planet(Vector3{x, y, z}, 10000, Vector3{0.000, 0, 0}, 1, BLACK, "Earth", 1);
+            governor.oct_tree->add_body(body);
+            governor.rigid_bodies.push_back(body);
             ////sleep for 1ms
         }
+        sim::RigidBody* body = new Planet(Vector3{0, 0, 0.1}, 100000000, Vector3{0.000, 0, 0}, 1, YELLOW, "SUN", 1);
+        governor.oct_tree->add_body(body);
+        governor.rigid_bodies.push_back(body);
+        sim::RigidBody* body2 = new Planet(Vector3{30, 0, 0}, 1000, Vector3{0.000, 0.005, 0}, 1, BLACK, "Earth", 1);
+        governor.oct_tree->add_body(body2);
+        governor.rigid_bodies.push_back(body2);
+        sim::RigidBody* body3 = new Planet(Vector3{-30, 0, 0}, 1000, Vector3{0.000,0.010, 0.001}, 1, BLUE, "Earth", 1);
+        governor.oct_tree->add_body(body3);
+        governor.rigid_bodies.push_back(body3);
     }
 
-
-
+    auto stop = std::chrono::high_resolution_clock::now();
+    auto duration = duration_cast<std::chrono::nanoseconds>(stop - start);
+    // To get the value of duration use the count()
+    // member function on the duration object
+    std::cout << "generating octree took on average:"<< duration.count() <<" ns and "<<duration_cast<std::chrono::milliseconds>(stop - start).count()<< "ms" << std::endl;
     bool is_finished=false;
     auto thread_ = std::thread([&]() {
         constexpr int MAX=10;
@@ -173,9 +196,9 @@ int main()
             if(abs(z)>great_val) {
                 great_val=abs(z);
             }
-            governor.oct_tree->bodies_.push_back(std::make_shared<Planet>(Vector3{x,y,z}, 1000000, Vector3{0.00016, 0, 0}, 1,BLACK, "Earth", 1));
-            governor.oct_tree->size=great_val;
-            governor.oct_tree->generateDasOctree();
+            //governor.oct_tree->bodies_.push_back(std::make_shared<Planet>(Vector3{x,y,z}, 1000000, Vector3{0.00016, 0, 0}, 1,BLACK, "Earth", 1));
+            governor.oct_tree->size=60;
+            //governor.oct_tree->generateDasOctree();
         }
         //std::this_thread::sleep_for(std::chrono::milliseconds(4000));;
         //governor.oct_tree->generateOctree(great_x,great_y,great_z);
@@ -186,10 +209,9 @@ int main()
         // member function on the duration object
         std::cout << "generating octree took on average:"<< duration.count()/MAX <<" ns and "<<duration_cast<std::chrono::milliseconds>(stop - start).count()/MAX<< "ms" << std::endl;
         is_finished=true;
-        governor.startOctreeSimulation(mtx);
+        //governor.startOctreeSimulation(mtx);
     });
     std::cout<<sizeof(governor.oct_tree);
-
 
         //governor.setBodies(bodies);
         //governor.loadSimulation();
@@ -206,6 +228,7 @@ int main()
 
     std::cout<<GetMonitorRefreshRate(0)<<std::endl;
     Vector3 camera_position = {0,0,0};
+    governor.start_simulation(mtx);
     //float speed=0.1f;
     // Main game loop
     while (!WindowShouldClose())    // Detect window close button or ESC key
@@ -292,23 +315,33 @@ int main()
 
         if(is_finished)
             {
+            std::lock_guard<std::mutex> lock(mtx);
+
             {
+                //std::cout<<governor.oct_tree->bodies_[0]->mass;
                 auto start = std::chrono::high_resolution_clock::now();
-                //std::lock_guard<std::mutex> lock(mtx);
-                for (const auto& rigid_body: governor.oct_tree->bodies_) {
+                for (const auto& rigid_body: governor.rigid_bodies) {
                     try {
-                        auto* we =dynamic_cast<Planet*>(rigid_body.get());
+                        auto* we =dynamic_cast<Planet*>(rigid_body);
                         //DrawModel(LoadModelFromMesh(GenMeshSphere(.1f,3,3)), we->position, 1.0f, we->color);
-                        DrawCubeWires(we->position, 0.04f, 0.04f, 0.04f, we->color);
+                        //DrawCubeWires(we->position, BODY_SIZE, BODY_SIZE, BODY_SIZE, we->color);
+                        /*Vector3 normalized_force= Vector3Normalize(we->force);
+                        float magnitude = Vector3Length(we->force);
+                        DrawLine3D(we->position,normalized_force*magnitude*FORCE_MULTIPLIER+we->position,RED);*/
+                        DrawCubeWires(we->position,.5f,.5f,.5f,BLACK);
                         //std::cout<<"model drawn"<<we->name<<std::endl;
                     }catch (error_t) {
                         std::cout<<"Error"<<std::endl;
                     }
                 }
+                //DrawCube(governor.general_center_of_mass, 5.0f, 5.0f, 5.0f, RED);
+
                 auto stop = std::chrono::high_resolution_clock::now();
                 auto duration = duration_cast<std::chrono::milliseconds>(stop - start);
                 //std::cout<<"Drawing took:"<<duration.count() << std::endl;
             }
+            //std::cout<<governor.general_center_of_mass.x<<","<<governor.general_center_of_mass.y<<","<<governor.general_center_of_mass.z<<std::endl;
+            //DrawCube(governor.general_center_of_mass, 5.0f, 5.0f, 5.0f, RED);
 
 
             //DrawGrid(500, 1.0);
@@ -332,9 +365,9 @@ int main()
 
         GuiGroupBox((Rectangle){ 25,90 , 125, 130 }, "Simulation controls");
         //GuiLock();
-        GuiSetState(STATE_NORMAL); if (GuiButton((Rectangle){ 30, 100, 115, 30 }, "Pause simulation")) {governor.pauseSimulation();}
-        GuiSetState(STATE_NORMAL); if (GuiButton((Rectangle){ 30, 140, 115, 30 }, "Start simulation")) {governor.startSimulation(mtx);}
-        GuiSetState(STATE_NORMAL); if (GuiButton((Rectangle){ 30, 180, 115, 30 }, "Save simulation")) {governor.saveSimulation(mtx);}
+        GuiSetState(STATE_NORMAL); if (GuiButton((Rectangle){ 30, 100, 115, 30 }, "Pause simulation")) {governor.pause_simulation();}
+        //GuiSetState(STATE_NORMAL); if (GuiButton((Rectangle){ 30, 140, 115, 30 }, "Start simulation")) {governor.startSimulation(mtx, /*TODO*/);}
+//        GuiSetState(STATE_NORMAL); if (GuiButton((Rectangle){ 30, 180, 115, 30 }, "Save simulation")) {governor.saveSimulation(mtx);}
         //GuiUnlock();
         //DrawText("Congrats! You created your first window!", 190, 200, 20, LIGHTGRAY);
         GuiGroupBox((Rectangle){25,250,200,100},"Camera controls");
@@ -345,7 +378,7 @@ int main()
         GuiGroupBox((Rectangle){25,340,200,40},"Debug controls");
         GuiLabel((Rectangle){ 30, 350, 150, 20 }, "Node render");
         float a=draw_level;
-        GuiSlider((Rectangle){ 50, 370, 80, 20 }, "", TextFormat("", draw_level), &a, 0, 15);
+        GuiSlider((Rectangle){ 50, 370, 80, 20 }, "", TextFormat("", draw_level), &a, 0, 50);
         draw_level=a;
         //TODO here
         EndDrawing();
@@ -353,7 +386,7 @@ int main()
         //----------------------------------------------------------------------------------
     }
     thread_.join();
-    governor.pauseSimulation();
+    governor.pause_simulation();
     //governor.saveSimulation();
     // De-Initialization
     //--------------------------------------------------------------------------------------
