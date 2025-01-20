@@ -15,11 +15,17 @@
 const Color color_map[18] = {LIGHTGRAY,GRAY,DARKGRAY,BROWN,BLUE,PURPLE,ORANGE,RED,PINK,GRAY,DARKGRAY,MAROON,GOLD,LIME,DARKGREEN,DARKBLUE,DARKPURPLE};
 constexpr  float dif=0.00f;
 constexpr int BODY_SIZE=1.5f;
-constexpr float FORCE_MULTIPLIER =10000;
-constexpr float FORCE_THICKNESS =1;
+constexpr float FORCE_MULTIPLIER = 2.5f;
 
-//convert this to use heap memory
-void draw_structure_iterative(const dstruct::OctTree &octree_t, int depth, float whl, int draw_level) {
+/**
+ *
+ * @param octree_t root octree
+ * @param depth depth to which the octree debug should be drawn
+ * @param whl width height length
+ * @param draw_level level to which the octree debug should be drawn
+ * @param draw_center_of_mass whether to draw center of mass
+ */
+void draw_structure_iterative(const dstruct::OctTree &octree_t, int depth, float whl, int draw_level,bool draw_center_of_mass) {
     std::stack<std::tuple<const dstruct::OctTree*, int, float>> stack;
     stack.push(std::make_tuple(&octree_t, depth, whl));
 
@@ -29,7 +35,9 @@ void draw_structure_iterative(const dstruct::OctTree &octree_t, int depth, float
 
         if (current_depth >= draw_level) {
             DrawCubeWires(node->position, current_whl - dif, current_whl - dif, current_whl - dif, color_map[current_depth]);
-            DrawSphereWires(node->center_of_mass,1.0f,5,5,GREEN);
+            if (draw_center_of_mass) {
+                DrawSphereWires(node->center_of_mass,1.0f,5,5,GREEN);
+            }
             //DrawCubeWires(node->bodies_[0]->position, BODY_SIZE, BODY_SIZE, BODY_SIZE, BLACK);
             //DrawSphere(node->center_of_mass, 0.5f, RED);
         }
@@ -94,7 +102,13 @@ int main()
     std::vector<sim::RigidBody*> bodies_{};
     float great_val{};
     bool is_cluster=true;
+    bool draw_center_of_mass=false;
+    bool draw_force=false;
     auto start = std::chrono::high_resolution_clock::now();
+
+
+
+
 
     //INTERESTING ONES
     /*{20, 20, -20},
@@ -112,7 +126,7 @@ int main()
             {-20, 20, 20},
             {-20, -20, -20}
         };
-        for (int i = 0; i < 30000; ++i) {
+        for (int i = 0; i < 10000; ++i) {
             // Select a random cluster center
             Vector3 center = cluster_centers[std::rand() % cluster_centers.size()];
             // Generate spherical coordinates
@@ -313,11 +327,16 @@ int main()
         Vector3 position = { 0.0f, 0.0f, 0.0f };
         //DrawModel(LoadModelFromMesh(GenMeshCube(5.0f,5.0f,5.0f)), position, 1.0f, WHITE);
 
+        ///
+        ///
+        /// DRAWING/RENDERING
+        ///
+        ///
         if(is_finished)
             {
             std::lock_guard<std::mutex> lock(mtx);
-
             {
+                Mesh cube = GenMeshCube(1.0f, 1.0f, 1.0f);
                 //std::cout<<governor.oct_tree->bodies_[0]->mass;
                 auto start = std::chrono::high_resolution_clock::now();
                 for (const auto& rigid_body: governor.rigid_bodies) {
@@ -325,9 +344,10 @@ int main()
                         auto* we =dynamic_cast<Planet*>(rigid_body);
                         //DrawModel(LoadModelFromMesh(GenMeshSphere(.1f,3,3)), we->position, 1.0f, we->color);
                         //DrawCubeWires(we->position, BODY_SIZE, BODY_SIZE, BODY_SIZE, we->color);
-                        /*Vector3 normalized_force= Vector3Normalize(we->force);
-                        float magnitude = Vector3Length(we->force);
-                        DrawLine3D(we->position,normalized_force*magnitude*FORCE_MULTIPLIER+we->position,RED);*/
+                        if (draw_force){
+                            Vector3 normalized_force= Vector3Normalize(we->force);
+                            DrawLine3D(we->position,normalized_force*FORCE_MULTIPLIER+we->position,RED);
+                        }
                         DrawCubeWires(we->position,.5f,.5f,.5f,BLACK);
                         //std::cout<<"model drawn"<<we->name<<std::endl;
                     }catch (error_t) {
@@ -347,7 +367,7 @@ int main()
             //DrawGrid(500, 1.0);
             //float greatest_val=std::max(great_x,std::max(great_y,great_z));
             auto start = std::chrono::high_resolution_clock::now();
-            draw_structure_iterative(*governor.oct_tree,0,governor.oct_tree->size*2,draw_level);
+            draw_structure_iterative(*governor.oct_tree,0,governor.oct_tree->size*2,draw_level,draw_center_of_mass);
             auto stop = std::chrono::high_resolution_clock::now();
             auto duration = duration_cast<std::chrono::milliseconds>(stop - start);
             //std::cout<<"Drawing octree took:"<<duration.count() << std::endl;
@@ -375,10 +395,12 @@ int main()
         GuiSlider((Rectangle){ 50, 290, 80, 20 }, "", TextFormat("%2.2f", speed), &speed, 0.0001, 1);
         GuiLabel((Rectangle){ 30, 310, 150, 20 }, "Movement speed:");
         GuiSlider((Rectangle){ 50, 330, 80, 20 }, "", TextFormat("%2.2f", movement_speed), &movement_speed, 0.001, 4);
-        GuiGroupBox((Rectangle){25,340,200,40},"Debug controls");
-        GuiLabel((Rectangle){ 30, 350, 150, 20 }, "Node render");
+        GuiGroupBox((Rectangle){25,370,200,100},"Debug controls");
+        GuiLabel((Rectangle){ 30, 380, 150, 20 }, "Node render");
         float a=draw_level;
-        GuiSlider((Rectangle){ 50, 370, 80, 20 }, "", TextFormat("", draw_level), &a, 0, 50);
+        GuiSlider((Rectangle){ 50, 400, 80, 20 }, "", TextFormat("", draw_level), &a, 0, 50);
+        GuiCheckBox((Rectangle){ 25, 450, 15, 15 }, "Draw center of mass", &draw_center_of_mass);
+        GuiCheckBox((Rectangle){ 25, 470, 15, 15 }, "Draw forces", &draw_force);
         draw_level=a;
         //TODO here
         EndDrawing();
