@@ -28,6 +28,7 @@ namespace dstruct {
                 children.clear();
             }
             Vector3 position{};
+            // maybe could optimize this by storing an array of pointers to the bodies only on the leafs and not the branches
             std::vector<sim::RigidBody*> bodies_ ={};
             std::vector<OctTree*> children{};
             Vector3 center_of_mass{};

@@ -227,9 +227,12 @@ int main() {
     Vector3 camera_position = {0, 0, 0};
 
     governor.start_simulation(mtx);
+    auto frame_start = std::chrono::high_resolution_clock::now();
+    auto frame_end = std::chrono::high_resolution_clock::now();
 
     while (!WindowShouldClose()) // Detect window close button or ESC key
     {
+        frame_start = std::chrono::high_resolution_clock::now();
         //GUI state control
         if (!is_gui_mode) {
             SetWindowFocused();
@@ -361,6 +364,7 @@ int main() {
             draw_level = a;
             //TODO here
             EndDrawing();
+            frame_end = std::chrono::high_resolution_clock::now();
         }
 
         //----------------------------------------------------------------------------------

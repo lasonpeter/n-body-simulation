@@ -6,7 +6,6 @@ set(CMAKE_CXX_STANDARD 26)
 
 # Set the paths to the Raylib headers and library
 set(RAYLIB_INCLUDE_DIR ${CMAKE_SOURCE_DIR}/include)
-set(RAYLIB_LIBRARY ${CMAKE_SOURCE_DIR}/lib/libraylib.a)
 
 # Add the include directories to the project
 include_directories(${RAYLIB_INCLUDE_DIR})
@@ -24,14 +23,7 @@ add_executable(n-body-simulation main.cpp
         data-structures/oct_tree.cpp
         data-structures/oct_tree.h
 )
-find_package(nlohmann_json CONFIG REQUIRED)
 
 find_package(glaze CONFIG REQUIRED)
-#target_link_libraries(n-body-simulation PRIVATE glaze::glaze)
 
-#target_link_libraries(n-body-simulation PRIVATE nlohmann_json::nlohmann_json)
-# Link raylib and other necessary libraries (like OpenGL, pthread, etc.)
-target_link_libraries(n-body-simulation ${RAYLIB_LIBRARY} GL pthread dl rt X11)
-
-# Optional: Set any additional compile flags if needed
-# target_compile_options(n-body-simulation PRIVATE -Wall -Wextra)
+target_link_libraries(n-body-simulation raylib GL pthread dl rt X11)
