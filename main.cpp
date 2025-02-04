@@ -108,7 +108,7 @@ int main() {
     governor.oct_tree = new dstruct::OctTree(Vector3{0, 0, 0}, 60);
     std::vector<sim::RigidBody *> bodies_{};
     float great_val{};
-    bool is_cluster = false;
+    bool is_cluster = true;
     bool draw_center_of_mass = false;
     bool draw_force = false;
     bool draw_planets = true;
