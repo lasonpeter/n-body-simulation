@@ -10,6 +10,5 @@
 
 namespace sim {
     //Required for polymorphism
-    RigidBody::RigidBody() {}
-
+    RigidBody::RigidBody() = default;
 }

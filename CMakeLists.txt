@@ -23,8 +23,6 @@ add_executable(n-body-simulation main.cpp
         include/style_amber.h
         data-structures/oct_tree.cpp
         data-structures/oct_tree.h
-        Int3.cpp
-        Int3.h
 )
 find_package(nlohmann_json CONFIG REQUIRED)
 

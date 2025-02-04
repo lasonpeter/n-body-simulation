@@ -12,16 +12,17 @@
 //#include "rigid_body.h"
 
 
-
-
-class Planet: public sim::RigidBody {
+class Planet : public sim::RigidBody {
 public:
-    uint id;
+    uint id{};
     Color color{};
-    std::string name;
+    std::string name{};
+
     //generate a constructor
     Planet();
+
     Planet(Vector3, long long unsigned int, Vector3, float, Color, std::string, uint);
+
     struct glaze {
         using T = Planet;
         static constexpr auto value = glz::object(
@@ -30,7 +31,8 @@ public:
             "name", &Planet::name,
             "position", &Planet::position,
             "velocity", &Planet::velocity,
-            "mass", &Planet::mass
+            "mass", &Planet::mass,
+            "force", &Planet::force
         );
     };
 };
