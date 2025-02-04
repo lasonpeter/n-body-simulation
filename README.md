@@ -1,6 +1,6 @@
 # N body simulation
 This is a simple N body simulation using the Barnes-Hut algorithm. The simulation is written in C++ and uses the [RayLib](https://www.raylib.com/) library for rendering and [glaze](https://github.com/stephenberry/glaze) for serialization.
-
+![img1.png](docs/img1.png)
 ## Building
 To build the simulation, you need to have [conan](https://conan.io/) & [CMake](https://cmake.org/) installed. Then, you can run the following commands:
 
